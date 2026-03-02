@@ -1,0 +1,43 @@
+{
+  "extracted_data": {
+    "holder_name": "[REDACTED_HOLDER_NAME]",
+    "father_name": null,
+    "mother_name": null,
+    "date_of_birth": null,
+    "age": null,
+    "gender": "Male",
+    "social_category": null,
+    "marital_status": null,
+    "state": "Tamil Nadu",
+    "district": "Chennai",
+    "address": "[REDACTED_FULL_ADDRESS]",
+    "phone": "[REDACTED_PHONE_NUMBER]",
+    "email": null,
+    "aadhaar_number": "[REDACTED_AADHAAR_NUMBER]",
+    "pan_number": null,
+    "annual_family_income": null,
+    "income_slab": null,
+    "disability_status": null,
+    "disability_percentage": null,
+    "bpl_status": null,
+    "occupation": null,
+    "employment_status": null,
+    "education_qualification": null,
+    "document_specific_fields": {
+      "issuing_authority": "Unique Identification Authority of India",
+      "issue_date": "01/01/2014",
+      "certificate_number": "27/50570/53541",
+      "validity_period": null
+    }
+  },
+  "metadata": {
+    "document_type": "Aadhaar Card",
+    "confidence_score": 0.95,
+    "language_detected": "English/Hindi",
+    "processing_timestamp": "2024-01-15T10:30:00Z",
+    "redacted_fields_count": 5,
+    "preserved_fields_count": 9,
+    "warnings": [],
+    "document_quality": "High"
+  }
+}

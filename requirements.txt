@@ -1,0 +1,36 @@
+# FastAPI and ASGI server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic
+pydantic-settings==2.1.0
+
+# AWS SDK for Bedrock (1.34.131+ required for converse API with documents)
+boto3>=1.34.131
+botocore>=1.34.131
+
+# File handling
+python-multipart==0.0.6
+
+# Async support
+aiofiles==23.2.1
+
+# Logging and monitoring
+python-json-logger==2.0.7
+
+# Database drivers (for future use)
+motor==3.3.2  # Async MongoDB
+neo4j==5.16.0  # Neo4j driver
+redis==5.0.1  # Redis client
+
+# Task queue (for future use)
+dramatiq[redis]==1.15.0
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.26.0
