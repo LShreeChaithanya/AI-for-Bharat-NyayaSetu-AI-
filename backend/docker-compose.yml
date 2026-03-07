@@ -1,0 +1,12 @@
+services:
+  nsai:
+    build: .
+    container_name: nsai
+    ports:
+      - "8000:8000"
+    networks:
+      - vdb_network
+
+networks:
+  vdb_network:
+    external: true
