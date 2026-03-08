@@ -15,6 +15,9 @@ NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 driver = None
+# In-memory fallback when Neo4j is unavailable (user_id -> {name, email, step, file_name, file_path})
+_memory_store: dict[int, dict] = {}
+
 try:
     driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD), notifications_min_severity="OFF")
 except Exception:
@@ -22,6 +25,7 @@ except Exception:
 
 def clear_session(user_id: int):
     global driver
+    _memory_store.pop(user_id, None)
     if not driver:
         return
     try:
@@ -36,6 +40,13 @@ def clear_session(user_id: int):
 def save_user(user_id: int, name: str = None, email: str = None, step: str = None):
     global driver
     if not driver:
+        _memory_store.setdefault(user_id, {})
+        if name is not None:
+            _memory_store[user_id]["name"] = name
+        if email is not None:
+            _memory_store[user_id]["email"] = email
+        if step is not None:
+            _memory_store[user_id]["step"] = step
         return
     try:
         with driver.session() as session:
@@ -51,7 +62,7 @@ def save_user(user_id: int, name: str = None, email: str = None, step: str = Non
 def load_user(user_id: int) -> dict:
     global driver
     if not driver:
-        return {}
+        return _memory_store.get(user_id, {})
     try:
         with driver.session() as session:
             result = session.run("""
@@ -67,6 +78,9 @@ def load_user(user_id: int) -> dict:
 def save_file(user_id: int, file_name: str, file_path: str):
     global driver
     if not driver:
+        d = _memory_store.setdefault(user_id, {})
+        d["file_name"] = file_name
+        d["file_path"] = file_path
         return
     try:
         with driver.session() as session:
@@ -81,6 +95,9 @@ def save_file(user_id: int, file_name: str, file_path: str):
 def load_file(user_id: int) -> dict:
     global driver
     if not driver:
+        u = _memory_store.get(user_id, {})
+        if "file_name" in u and "file_path" in u:
+            return {"file_name": u["file_name"], "file_path": u["file_path"]}
         return {}
     try:
         with driver.session() as session:
@@ -98,7 +115,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     clear_session(user_id)
     save_user(user_id, step="collect_name")
-    await update.message.reply_text("👋 Welcome! Let's get started.\n\nPlease send me your *full name*.", parse_mode="Markdown")
+    await update.message.reply_text("👋 Welcome! Let's get started.\n\nPlease send me your full name.", parse_mode="Markdown")
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
@@ -110,15 +127,15 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     if step == "collect_name":
         save_user(user_id, name=user_input, step="collect_email")
-        await update.message.reply_text(f"Got it, *{user_input}*! 👍\n\nNow please send me your *email address*.", parse_mode="Markdown")
+        await update.message.reply_text(f"Got it, {user_input}! 👍\n\nNow please send me your email address.", parse_mode="Markdown")
     elif step == "collect_email":
         if "@" not in user_input or "." not in user_input:
             await update.message.reply_text("That doesn't look like a valid email. Please try again.")
             return
         save_user(user_id, email=user_input, step="collect_document")
-        await update.message.reply_text("Perfect! 📧\n\nNow please send me your *document* (PDF or image).", parse_mode="Markdown")
+        await update.message.reply_text("Perfect! 📧\n\nNow please send me your document (PDF or image).", parse_mode="Markdown")
     elif step == "collect_document":
-        await update.message.reply_text("Please send a *document or file*, not text.", parse_mode="Markdown")
+        await update.message.reply_text("Please send a document or file, not text.", parse_mode="Markdown")
     elif step == "done":
         await update.message.reply_text("✅ Already submitted! Type /start to submit again.")
     else:
@@ -172,12 +189,6 @@ async def handle_apply_callback(update: Update, context: ContextTypes.DEFAULT_TY
     except Exception:
         pass
 
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    import traceback
-    traceback.print_exc()
-    if update and isinstance(update, Update) and update.effective_message:
-        await update.effective_message.reply_text("Something went wrong. Please try again or /start.")
-
 if __name__ == "__main__":
     os.makedirs(FILES_DIR, exist_ok=True)
     req = telegram_request.HTTPXRequest(read_timeout=30, connect_timeout=30)
@@ -186,6 +197,7 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
     app.add_handler(CallbackQueryHandler(handle_apply_callback, pattern="^apply_now$"))
-    app.add_error_handler(error_handler)
+    print("Bot is running...")
+    app.run_polling()
     print("Bot is running...")
     app.run_polling()
