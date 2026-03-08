@@ -1,0 +1,15 @@
+[Unit]
+Description=NyayaSetu Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/nyayasetu-bot
+Environment="PATH=/opt/nyayasetu-bot/venv/bin"
+ExecStart=/opt/nyayasetu-bot/venv/bin/python bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
